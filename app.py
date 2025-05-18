@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from csv_summary import process_csv_files
 from make_all_summary import make_all_summary
+from make_all_summary_consecutive import make_all_summary_consecutive
 from graph_plotter import create_plots_on_image
 import os
 import sys
@@ -260,6 +261,7 @@ class CSVProcessorApp:
         # サブディレクトリを走査して処理
 
         all_df_list = [] # 2025/05/20 追記 被験者全体用のリスト
+        all_consecutive_df_list = [] # 2025/05/20 追記 被験者全体用のリスト
 
         subdirectories = [d for d in os.listdir(self.directory_mp) if os.path.isdir(os.path.join(self.directory_mp, d))]
         total_count = len(subdirectories)
@@ -299,10 +301,13 @@ class CSVProcessorApp:
                         [身長(cm)]列(22) と [体重(kg)]列(23) を [Hight(cm)] および [Weigh(kg)] にリネームしたのち左側に寄せる
                         DATA-ID,BIRTH,GENDER,Hight(cm),Weight(kg),データ吸い出し日,Age,BMI,600分以上の日数,[summary_dfのデータの平均] という順番に並べる
                         """
-                        row_all_df = make_all_summary(summary_df, 7, 36000, 4, matching_rows.iloc[0]["DATA-ID"], birth, age, matching_rows.iloc[0]["GENDER"])
+                        row_all_df = make_all_summary(summary_df, self.correction_var_mp.get(), 7, 36000, 4, matching_rows.iloc[0]["DATA-ID"], birth, age, matching_rows.iloc[0]["GENDER"])
                         # もし1日も閾値以上の日がない場合は最後の7日間を抽出するので、ここで判別 4日以上の場合CSVに記載
                         if row_all_df['600分以上の日数'].iloc[0] >= 4:
                             all_df_list.append(row_all_df)
+                        row_all_consecutive_df = make_all_summary_consecutive(summary_df, self.correction_var_mp.get(), 7, 7, 36000, matching_rows.iloc[0]["DATA-ID"], birth, age, matching_rows.iloc[0]["GENDER"])
+                        if len(row_all_consecutive_df) > 0:
+                            all_consecutive_df_list.append(row_all_consecutive_df)
                         """
                         2025/05/20 追記ここまで
                         """
@@ -322,11 +327,16 @@ class CSVProcessorApp:
         リストに追加された DataFrame を結合
         作成されたデータフレームを出力
         """
-        all_df = pd.concat(all_df_list, ignore_index=True)
         csv_path = Path(self.csv_sheet)
-        new_name = csv_path.with_stem(csv_path.stem + '_all_summary')
-        print(new_name)
-        all_df.to_csv(f'{new_name}', index=False, encoding='shift_jis')
+        # print(new_name)
+        if all_df_list:
+            new_name_1 = csv_path.with_stem(csv_path.stem + '_all_summary')
+            all_df = pd.concat(all_df_list, ignore_index=True)
+            all_df.to_csv(f'{new_name_1}', index=False, encoding='shift_jis')
+        if all_consecutive_df_list:
+            new_name_2 = csv_path.with_stem(csv_path.stem + '_all_summary_consecutive')
+            all_consecutive_df = pd.concat(all_consecutive_df_list, ignore_index=True)
+            all_consecutive_df.to_csv(f'{new_name_2}', index=False, encoding='shift_jis')
         """
         2025/05/20 追記ここまで
         """
