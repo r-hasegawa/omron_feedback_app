@@ -1,0 +1,17 @@
+# すべて無視
+*
+
+# ただし .gitignore 自体は無視しない
+!.gitignore
+
+# すべての .py ファイルは無視しない（追跡対象とする）
+!*.py
+!image_file/*
+!requirements.txt
+
+# .py ファイルがサブフォルダにある場合も含めたいときは下も追加
+!*/
+
+# __pycache__ など無視したいものは個別に追加
+__pycache__/
+*.pyc
