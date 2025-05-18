@@ -16,19 +16,24 @@ def make_all_summary(summary_df, window_size, threshold_min, threshold_days, dat
     max_sum = -1
     best_window_indices = None
 
-    # 日数優先　日数が同じの場合は合計装着時間で選択(合計装着時間も同じの場合は日付が古い期間を選択)
-    for i in range(len(summary_df) - window_size + 1):
-        window = summary_df.iloc[i:i + window_size]
-        count_above_threshold = (window.iloc[:,-1] >= threshold_min).sum()
-        total_wear_time = window.iloc[:,-1].sum()
+    if len(summary_df) >= window_size:
 
-        if count_above_threshold > max_days:
-            max_days = count_above_threshold
-            max_sum = total_wear_time
-            best_window_indices = window.index
-        elif count_above_threshold == max_days and total_wear_time > max_sum:
-            max_sum = total_wear_time
-            best_window_indices = window.index
+        # 日数優先　日数が同じの場合は合計装着時間で選択(合計装着時間も同じの場合は日付が古い期間を選択)
+        for i in range(len(summary_df) - window_size + 1):
+            window = summary_df.iloc[i:i + window_size]
+            count_above_threshold = (window.iloc[:,-1] >= threshold_min).sum()
+            total_wear_time = window.iloc[:,-1].sum()
+
+            if count_above_threshold > max_days:
+                max_days = count_above_threshold
+                max_sum = total_wear_time
+                best_window_indices = window.index
+            elif count_above_threshold == max_days and total_wear_time > max_sum:
+                max_sum = total_wear_time
+                best_window_indices = window.index
+
+    else:
+        best_window_indices = summary_df.index
 
     # 最適なウィンドウを selected_df として抽出
     # もし1日も閾値以上の日がない場合は最後の7日間を抽出
@@ -63,7 +68,7 @@ def make_all_summary(summary_df, window_size, threshold_min, threshold_days, dat
     row_avg = row_avg.drop(columns=['身長(cm)', '体重(kg)'])
     return_df = pd.concat([info_df, row_avg], axis=1)
 
-    # print(return_df)
+    # print(return_df['600分以上の日数'])
 
 
     return return_df
